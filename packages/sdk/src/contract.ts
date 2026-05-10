@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ProvenanceSchema, SourceRefSchema } from "./provenance.js";
 
-const SchemaShapeSchema = z.object({
+export const SchemaShapeSchema = z.object({
   name: z.string(),
   type: z.string(),
   required: z.boolean(),
@@ -27,6 +27,7 @@ export const ContractFieldSchema = z.object({
   required: z.boolean(),
   provenance: ProvenanceSchema,
 });
+export type ContractField = z.infer<typeof ContractFieldSchema>;
 
 export const ContractSchema = z.object({
   id: z.string(),
@@ -49,6 +50,7 @@ export const FlowStepSchema = z.object({
   warn: z.boolean().optional(),
   provenance: ProvenanceSchema,
 });
+export type FlowStep = z.infer<typeof FlowStepSchema>;
 
 export const FlowSchema = z.object({
   id: z.string(),

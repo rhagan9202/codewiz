@@ -34,6 +34,36 @@ const dupIdAdapter: LanguageAdapter = {
   },
 };
 
+const badTargetAdapter: LanguageAdapter = {
+  async initialize() {
+    return {
+      adapterName: "mock",
+      adapterVersion: "0.0.0",
+      protocolVersion: 1,
+      capabilities: ["modules"],
+      fileGlobs: ["**/*.mock"],
+    };
+  },
+  async analyze() {
+    return {
+      modules: [{
+        id: "mock:foo.mock", name: "foo", path: "foo.mock", language: "mock",
+        layer: { value: "service", provenance: { source: "static" } },
+        kind: "service", loc: 1,
+        citations: [{ path: "foo.mock", line: 1 }],
+      }],
+      edges: [{
+        source: "mock:foo.mock",
+        target: "mock:nonexistent.mock",
+        kind: "imports",
+        provenance: { source: "static" },
+      }],
+      contracts: [], httpEndpoints: [], diagnostics: [],
+    };
+  },
+  async shutdown() {},
+};
+
 describe("conformance harness", () => {
   it("good adapter passes", async () => {
     const result = await runConformanceSuite(goodAdapter, {
@@ -51,5 +81,14 @@ describe("conformance harness", () => {
     });
     expect(result.passed).toBe(false);
     expect(result.failures.some(f => f.includes("duplicate"))).toBe(true);
+  });
+
+  it("edge with unknown target in adapter namespace fails the suite", async () => {
+    const result = await runConformanceSuite(badTargetAdapter, {
+      projectRoot: "/tmp",
+      files: ["foo.mock"],
+    });
+    expect(result.passed).toBe(false);
+    expect(result.failures.some(f => f.includes("target") && f.includes("nonexistent"))).toBe(true);
   });
 });

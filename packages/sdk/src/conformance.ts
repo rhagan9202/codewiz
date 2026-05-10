@@ -29,10 +29,6 @@ export async function runConformanceSuite(
     return { passed: false, failures };
   }
 
-  if (init.protocolVersion !== 1) {
-    failures.push(`adapter declared protocolVersion ${init.protocolVersion}, expected 1`);
-  }
-
   let resp;
   try {
     resp = AnalyzeResponseSchema.parse(await adapter.analyze({ files: input.files }));
@@ -52,6 +48,9 @@ export async function runConformanceSuite(
   for (const e of resp.edges) {
     if (!ids.has(e.source) && e.source.startsWith(`${init.adapterName}:`)) {
       failures.push(`edge source ${e.source} not in modules`);
+    }
+    if (!ids.has(e.target) && e.target.startsWith(`${init.adapterName}:`)) {
+      failures.push(`edge target ${e.target} not in modules`);
     }
   }
 

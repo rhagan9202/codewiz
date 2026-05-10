@@ -725,7 +725,7 @@ Run: `pnpm --filter @codewiz/sdk test`
 import { z } from "zod";
 import { ProvenanceSchema, SourceRefSchema } from "./provenance.js";
 
-const SchemaShapeSchema = z.object({
+export const SchemaShapeSchema = z.object({
   name: z.string(),
   type: z.string(),
   required: z.boolean(),
@@ -751,6 +751,7 @@ export const ContractFieldSchema = z.object({
   required: z.boolean(),
   provenance: ProvenanceSchema,
 });
+export type ContractField = z.infer<typeof ContractFieldSchema>;
 
 export const ContractSchema = z.object({
   id: z.string(),
@@ -773,6 +774,7 @@ export const FlowStepSchema = z.object({
   warn: z.boolean().optional(),
   provenance: ProvenanceSchema,
 });
+export type FlowStep = z.infer<typeof FlowStepSchema>;
 
 export const FlowSchema = z.object({
   id: z.string(),
@@ -1016,6 +1018,36 @@ const dupIdAdapter: LanguageAdapter = {
   },
 };
 
+const badTargetAdapter: LanguageAdapter = {
+  async initialize() {
+    return {
+      adapterName: "mock",
+      adapterVersion: "0.0.0",
+      protocolVersion: 1,
+      capabilities: ["modules"],
+      fileGlobs: ["**/*.mock"],
+    };
+  },
+  async analyze() {
+    return {
+      modules: [{
+        id: "mock:foo.mock", name: "foo", path: "foo.mock", language: "mock",
+        layer: { value: "service", provenance: { source: "static" } },
+        kind: "service", loc: 1,
+        citations: [{ path: "foo.mock", line: 1 }],
+      }],
+      edges: [{
+        source: "mock:foo.mock",
+        target: "mock:nonexistent.mock",
+        kind: "imports",
+        provenance: { source: "static" },
+      }],
+      contracts: [], httpEndpoints: [], diagnostics: [],
+    };
+  },
+  async shutdown() {},
+};
+
 describe("conformance harness", () => {
   it("good adapter passes", async () => {
     const result = await runConformanceSuite(goodAdapter, {
@@ -1033,6 +1065,15 @@ describe("conformance harness", () => {
     });
     expect(result.passed).toBe(false);
     expect(result.failures.some(f => f.includes("duplicate"))).toBe(true);
+  });
+
+  it("edge with unknown target in adapter namespace fails the suite", async () => {
+    const result = await runConformanceSuite(badTargetAdapter, {
+      projectRoot: "/tmp",
+      files: ["foo.mock"],
+    });
+    expect(result.passed).toBe(false);
+    expect(result.failures.some(f => f.includes("target") && f.includes("nonexistent"))).toBe(true);
   });
 });
 ```
@@ -1075,10 +1116,6 @@ export async function runConformanceSuite(
     return { passed: false, failures };
   }
 
-  if (init.protocolVersion !== 1) {
-    failures.push(`adapter declared protocolVersion ${init.protocolVersion}, expected 1`);
-  }
-
   let resp;
   try {
     resp = AnalyzeResponseSchema.parse(await adapter.analyze({ files: input.files }));
@@ -1098,6 +1135,9 @@ export async function runConformanceSuite(
   for (const e of resp.edges) {
     if (!ids.has(e.source) && e.source.startsWith(`${init.adapterName}:`)) {
       failures.push(`edge source ${e.source} not in modules`);
+    }
+    if (!ids.has(e.target) && e.target.startsWith(`${init.adapterName}:`)) {
+      failures.push(`edge target ${e.target} not in modules`);
     }
   }
 
