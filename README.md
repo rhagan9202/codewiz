@@ -101,3 +101,20 @@ The full spec is in [`docs/superpowers/specs/`](docs/superpowers/specs/).
 ## License
 
 [MIT](LICENSE) — Copyright (c) 2026 codeWizualizer contributors.
+
+## Releasing
+
+This project uses [Changesets](https://github.com/changesets/changesets) for versioning.
+
+1. Make changes on a feature branch.
+2. Run `pnpm changeset` to add a changeset entry describing the change (`patch` / `minor` / `major`).
+3. Open a PR. CI runs build + tests + Playwright e2e.
+4. After PR merges to `main`, the **Release** workflow opens a "chore: version packages" PR that consumes pending changesets, bumps versions, and writes `CHANGELOG.md`.
+5. Merging that PR triggers `pnpm release`, which builds and publishes to npm with provenance.
+
+### One-time setup (maintainer)
+
+The release workflow requires an `NPM_TOKEN` repo secret with publish access to the `codewiz` and `@codewiz/*` packages.
+
+1. Create an automation token at https://www.npmjs.com/settings/<your-username>/tokens (type: **Automation**).
+2. Add it to the repo secrets at `https://github.com/<owner>/codewiz/settings/secrets/actions` named `NPM_TOKEN`.
