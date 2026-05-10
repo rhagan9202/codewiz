@@ -22,7 +22,7 @@ codewiz/
 ├── tsconfig.base.json
 ├── vitest.workspace.ts
 ├── .prettierrc.json
-├── .eslintrc.cjs
+├── eslint.config.js
 ├── packages/
 │   ├── sdk/
 │   │   ├── package.json
@@ -222,7 +222,7 @@ git commit -m "chore: bootstrap pnpm workspace + Turborepo + base tsconfig"
 **Files:**
 - Create: `vitest.workspace.ts`
 - Create: `.prettierrc.json`
-- Create: `.eslintrc.cjs`
+- Create: `eslint.config.js`
 - Create: `tests/package.json`
 - Create: `tests/smoke.test.ts`
 - Modify: `package.json` (add deps)
@@ -232,7 +232,7 @@ git commit -m "chore: bootstrap pnpm workspace + Turborepo + base tsconfig"
 Run:
 ```
 pnpm add -Dw vitest@^2.1.0 @vitest/coverage-v8@^2.1.0 \
-  eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin \
+  eslint @eslint/js @typescript-eslint/parser @typescript-eslint/eslint-plugin \
   eslint-config-prettier
 ```
 
@@ -259,24 +259,44 @@ export default defineWorkspace([
 }
 ```
 
-- [ ] **Step 4: Create `.eslintrc.cjs`**
+- [ ] **Step 4: Create `eslint.config.js`**
 
 ```js
-module.exports = {
-  root: true,
-  parser: "@typescript-eslint/parser",
-  plugins: ["@typescript-eslint"],
-  extends: [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "prettier",
-  ],
-  parserOptions: { ecmaVersion: 2022, sourceType: "module" },
-  rules: {
-    "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+import tsParser from "@typescript-eslint/parser";
+import tsPlugin from "@typescript-eslint/eslint-plugin";
+import prettierConfig from "eslint-config-prettier";
+import js from "@eslint/js";
+
+export default [
+  {
+    ignores: [
+      "**/dist/**",
+      "**/node_modules/**",
+      "tests/fixtures/**",
+      // codeWizualizer prototype files (legacy, untyped, kept for reference)
+      "app.jsx",
+      "data.js",
+      "graph.jsx",
+      "picker.jsx",
+      "tweaks-panel.jsx",
+      "views.jsx",
+    ],
   },
-  ignorePatterns: ["dist", "node_modules", "tests/fixtures/**"],
-};
+  js.configs.recommended,
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: { ecmaVersion: 2022, sourceType: "module" },
+    },
+    plugins: { "@typescript-eslint": tsPlugin },
+    rules: {
+      ...tsPlugin.configs.recommended.rules,
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    },
+  },
+  prettierConfig,
+];
 ```
 
 - [ ] **Step 5: Create `tests/package.json`**
@@ -334,7 +354,7 @@ Expected: 1 file passed, 1 test passed.
 - [ ] **Step 9: Commit**
 
 ```bash
-git add vitest.workspace.ts .prettierrc.json .eslintrc.cjs tests/ pnpm-lock.yaml package.json
+git add vitest.workspace.ts .prettierrc.json eslint.config.js tests/ pnpm-lock.yaml package.json
 git commit -m "chore: add vitest workspace + eslint/prettier + smoke test"
 ```
 
