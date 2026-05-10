@@ -10,31 +10,27 @@ export function eventsRoutes(bus: EventBus): Hono {
     c.header("Connection", "keep-alive");
     return stream(c, async (s) => {
       const queue: ServerEvent[] = [];
-      let resolve: (() => void) | null = null;
+      let wake: (() => void) | null = null;
+      const wakeNow = () => { const w = wake; wake = null; w?.(); };
       const unsubscribe = bus.subscribe((event) => {
         queue.push(event);
-        if (resolve) { const r = resolve; resolve = null; r(); }
+        wakeNow();
       });
+      s.onAbort(() => { wakeNow(); });
+      const heartbeat = setInterval(() => { void s.write(": ping\n\n"); }, 15000);
       try {
-        // Heartbeat so proxies don't close the stream.
-        const heartbeat = setInterval(() => {
-          void s.write(": ping\n\n");
-        }, 15000);
-        try {
-          while (!s.aborted) {
-            if (queue.length === 0) {
-              await new Promise<void>((r) => { resolve = r; });
-            }
-            const event = queue.shift();
-            if (event) {
-              await s.write(`event: ${event.type}\n`);
-              await s.write(`data: ${JSON.stringify("payload" in event ? event.payload : {})}\n\n`);
-            }
+        while (!s.aborted) {
+          if (queue.length === 0) {
+            await new Promise<void>((r) => { wake = r; });
+            if (s.aborted) break;
           }
-        } finally {
-          clearInterval(heartbeat);
+          const event = queue.shift();
+          if (!event) continue;
+          await s.write(`event: ${event.type}\n`);
+          await s.write(`data: ${JSON.stringify("payload" in event ? event.payload : {})}\n\n`);
         }
       } finally {
+        clearInterval(heartbeat);
         unsubscribe();
       }
     });

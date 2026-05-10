@@ -60,4 +60,21 @@ describe("static file serving", () => {
     const res = await app.fetch(new Request("http://localhost/api/unknown"));
     expect(res.status).toBe(404);
   });
+
+  it("rejects path-traversal attempts", async () => {
+    const app = createServer({ projectRoot, webDist });
+    const res = await app.fetch(new Request("http://localhost/../../etc/passwd"));
+    // Hono normalizes the URL; check the response is a 200 SPA fallback or 404,
+    // never a 200 with /etc/passwd contents.
+    const body = await res.text();
+    expect(body).not.toMatch(/^root:/);
+    expect(body).not.toMatch(/\/bin\/bash/);
+  });
+
+  it("rejects encoded path-traversal attempts", async () => {
+    const app = createServer({ projectRoot, webDist });
+    const res = await app.fetch(new Request("http://localhost/%2e%2e/%2e%2e/etc/passwd"));
+    const body = await res.text();
+    expect(body).not.toMatch(/^root:/);
+  });
 });

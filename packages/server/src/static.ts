@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { readFile, stat } from "node:fs/promises";
-import { join, extname } from "node:path";
+import { resolve, join, extname } from "node:path";
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -30,18 +30,23 @@ async function tryRead(p: string): Promise<{ body: Buffer; mime: string } | null
 
 export function staticRoutes(webDist: string): Hono {
   const r = new Hono();
+  const root = resolve(webDist);
   r.get("*", async (c) => {
     const url = new URL(c.req.url);
     if (url.pathname.startsWith("/api/")) return c.notFound();
-    // Strip leading "/", default to index.html
     const rel = url.pathname === "/" ? "index.html" : url.pathname.slice(1);
-    const direct = await tryRead(join(webDist, rel));
+    const target = resolve(join(root, rel));
+    // Containment check: target must equal root or be a descendant of root.
+    if (target !== root && !target.startsWith(root + "/")) {
+      return c.notFound();
+    }
+    const direct = await tryRead(target);
     if (direct) {
       c.header("Content-Type", direct.mime);
       return c.body(direct.body);
     }
-    // SPA fallback
-    const fallback = await tryRead(join(webDist, "index.html"));
+    // SPA fallback — always served from index.html (already inside root).
+    const fallback = await tryRead(join(root, "index.html"));
     if (fallback) {
       c.header("Content-Type", fallback.mime);
       return c.body(fallback.body);

@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
-  ProjectSchema, ManifestSchema,
+  ManifestSchema,
   ModuleSchema, EdgeSchema, ContractSchema, FlowSchema, DiagnosticSchema,
   type Project,
 } from "@codewiz/sdk";
@@ -37,5 +37,5 @@ export async function readProject(projectRoot: string): Promise<Project> {
     readJson(join(dir, "flows.json"),       z.array(FlowSchema)),
     readJson(join(dir, "diagnostics.json"), z.array(DiagnosticSchema)),
   ]);
-  return ProjectSchema.parse({ manifest, modules, edges, contracts, flows, diagnostics });
+  return { manifest, modules, edges, contracts, flows, diagnostics };
 }

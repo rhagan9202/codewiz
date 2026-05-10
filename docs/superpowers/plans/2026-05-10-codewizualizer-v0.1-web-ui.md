@@ -286,7 +286,7 @@ Run: `pnpm install && pnpm --filter @codewiz/server test`
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
-  ProjectSchema, ManifestSchema,
+  ManifestSchema,
   ModuleSchema, EdgeSchema, ContractSchema, FlowSchema, DiagnosticSchema,
   type Project,
 } from "@codewiz/sdk";
@@ -322,7 +322,7 @@ export async function readProject(projectRoot: string): Promise<Project> {
     readJson(join(dir, "flows.json"),       z.array(FlowSchema)),
     readJson(join(dir, "diagnostics.json"), z.array(DiagnosticSchema)),
   ]);
-  return ProjectSchema.parse({ manifest, modules, edges, contracts, flows, diagnostics });
+  return { manifest, modules, edges, contracts, flows, diagnostics };
 }
 ```
 
@@ -653,31 +653,27 @@ export function eventsRoutes(bus: EventBus): Hono {
     c.header("Connection", "keep-alive");
     return stream(c, async (s) => {
       const queue: ServerEvent[] = [];
-      let resolve: (() => void) | null = null;
+      let wake: (() => void) | null = null;
+      const wakeNow = () => { const w = wake; wake = null; w?.(); };
       const unsubscribe = bus.subscribe((event) => {
         queue.push(event);
-        if (resolve) { const r = resolve; resolve = null; r(); }
+        wakeNow();
       });
+      s.onAbort(() => { wakeNow(); });
+      const heartbeat = setInterval(() => { void s.write(": ping\n\n"); }, 15000);
       try {
-        // Heartbeat so proxies don't close the stream.
-        const heartbeat = setInterval(() => {
-          void s.write(": ping\n\n");
-        }, 15000);
-        try {
-          while (!s.aborted) {
-            if (queue.length === 0) {
-              await new Promise<void>((r) => { resolve = r; });
-            }
-            const event = queue.shift();
-            if (event) {
-              await s.write(`event: ${event.type}\n`);
-              await s.write(`data: ${JSON.stringify("payload" in event ? event.payload : {})}\n\n`);
-            }
+        while (!s.aborted) {
+          if (queue.length === 0) {
+            await new Promise<void>((r) => { wake = r; });
+            if (s.aborted) break;
           }
-        } finally {
-          clearInterval(heartbeat);
+          const event = queue.shift();
+          if (!event) continue;
+          await s.write(`event: ${event.type}\n`);
+          await s.write(`data: ${JSON.stringify("payload" in event ? event.payload : {})}\n\n`);
         }
       } finally {
+        clearInterval(heartbeat);
         unsubscribe();
       }
     });
@@ -801,6 +797,23 @@ describe("static file serving", () => {
     const res = await app.fetch(new Request("http://localhost/api/unknown"));
     expect(res.status).toBe(404);
   });
+
+  it("rejects path-traversal attempts", async () => {
+    const app = createServer({ projectRoot, webDist });
+    const res = await app.fetch(new Request("http://localhost/../../etc/passwd"));
+    // Hono normalizes the URL; check the response is a 200 SPA fallback or 404,
+    // never a 200 with /etc/passwd contents.
+    const body = await res.text();
+    expect(body).not.toMatch(/^root:/);
+    expect(body).not.toMatch(/\/bin\/bash/);
+  });
+
+  it("rejects encoded path-traversal attempts", async () => {
+    const app = createServer({ projectRoot, webDist });
+    const res = await app.fetch(new Request("http://localhost/%2e%2e/%2e%2e/etc/passwd"));
+    const body = await res.text();
+    expect(body).not.toMatch(/^root:/);
+  });
 });
 ```
 
@@ -813,7 +826,7 @@ Run: `pnpm --filter @codewiz/server test`
 ```ts
 import { Hono } from "hono";
 import { readFile, stat } from "node:fs/promises";
-import { join, extname } from "node:path";
+import { resolve, join, extname } from "node:path";
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -843,18 +856,23 @@ async function tryRead(p: string): Promise<{ body: Buffer; mime: string } | null
 
 export function staticRoutes(webDist: string): Hono {
   const r = new Hono();
+  const root = resolve(webDist);
   r.get("*", async (c) => {
     const url = new URL(c.req.url);
     if (url.pathname.startsWith("/api/")) return c.notFound();
-    // Strip leading "/", default to index.html
     const rel = url.pathname === "/" ? "index.html" : url.pathname.slice(1);
-    const direct = await tryRead(join(webDist, rel));
+    const target = resolve(join(root, rel));
+    // Containment check: target must equal root or be a descendant of root.
+    if (target !== root && !target.startsWith(root + "/")) {
+      return c.notFound();
+    }
+    const direct = await tryRead(target);
     if (direct) {
       c.header("Content-Type", direct.mime);
       return c.body(direct.body);
     }
-    // SPA fallback
-    const fallback = await tryRead(join(webDist, "index.html"));
+    // SPA fallback — always served from index.html (already inside root).
+    const fallback = await tryRead(join(root, "index.html"));
     if (fallback) {
       c.header("Content-Type", fallback.mime);
       return c.body(fallback.body);
