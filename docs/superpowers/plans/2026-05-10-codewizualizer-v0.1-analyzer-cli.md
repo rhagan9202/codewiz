@@ -843,6 +843,7 @@ describe("Adapter protocol", () => {
       adapterName: "@codewiz/adapter-ts",
       adapterVersion: "0.1.0",
       protocolVersion: 1,
+      idNamespace: "ts",
       capabilities: ["modules", "edges-imports"],
       fileGlobs: ["**/*.ts", "**/*.tsx"],
     };
@@ -905,6 +906,7 @@ export const InitResponseSchema = z.object({
   adapterName: z.string(),
   adapterVersion: z.string(),
   protocolVersion: z.literal(1),
+  idNamespace: z.string(),
   capabilities: z.array(CapabilitySchema),
   fileGlobs: z.array(z.string()),
 });
@@ -992,6 +994,7 @@ const goodAdapter: LanguageAdapter = {
       adapterName: "@codewiz/adapter-mock",
       adapterVersion: "0.0.0",
       protocolVersion: 1,
+      idNamespace: "mock",
       capabilities: ["modules"],
       fileGlobs: ["**/*.mock"],
     };
@@ -1021,9 +1024,10 @@ const dupIdAdapter: LanguageAdapter = {
 const badTargetAdapter: LanguageAdapter = {
   async initialize() {
     return {
-      adapterName: "mock",
+      adapterName: "@codewiz/adapter-mock",
       adapterVersion: "0.0.0",
       protocolVersion: 1,
+      idNamespace: "mock",
       capabilities: ["modules"],
       fileGlobs: ["**/*.mock"],
     };
@@ -1132,11 +1136,12 @@ export async function runConformanceSuite(
   }
 
   // Invariant: edges reference declared modules (within this adapter's output)
+  const nsPrefix = `${init.idNamespace}:`;
   for (const e of resp.edges) {
-    if (!ids.has(e.source) && e.source.startsWith(`${init.adapterName}:`)) {
+    if (!ids.has(e.source) && e.source.startsWith(nsPrefix)) {
       failures.push(`edge source ${e.source} not in modules`);
     }
-    if (!ids.has(e.target) && e.target.startsWith(`${init.adapterName}:`)) {
+    if (!ids.has(e.target) && e.target.startsWith(nsPrefix)) {
       failures.push(`edge target ${e.target} not in modules`);
     }
   }

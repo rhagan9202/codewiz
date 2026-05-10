@@ -20,6 +20,7 @@ export const InitResponseSchema = z.object({
   adapterName: z.string(),
   adapterVersion: z.string(),
   protocolVersion: z.literal(1),
+  idNamespace: z.string(),
   capabilities: z.array(CapabilitySchema),
   fileGlobs: z.array(z.string()),
 });

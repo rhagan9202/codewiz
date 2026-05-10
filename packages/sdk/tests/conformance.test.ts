@@ -8,6 +8,7 @@ const goodAdapter: LanguageAdapter = {
       adapterName: "@codewiz/adapter-mock",
       adapterVersion: "0.0.0",
       protocolVersion: 1,
+      idNamespace: "mock",
       capabilities: ["modules"],
       fileGlobs: ["**/*.mock"],
     };
@@ -37,9 +38,10 @@ const dupIdAdapter: LanguageAdapter = {
 const badTargetAdapter: LanguageAdapter = {
   async initialize() {
     return {
-      adapterName: "mock",
+      adapterName: "@codewiz/adapter-mock",
       adapterVersion: "0.0.0",
       protocolVersion: 1,
+      idNamespace: "mock",
       capabilities: ["modules"],
       fileGlobs: ["**/*.mock"],
     };

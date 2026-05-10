@@ -45,11 +45,12 @@ export async function runConformanceSuite(
   }
 
   // Invariant: edges reference declared modules (within this adapter's output)
+  const nsPrefix = `${init.idNamespace}:`;
   for (const e of resp.edges) {
-    if (!ids.has(e.source) && e.source.startsWith(`${init.adapterName}:`)) {
+    if (!ids.has(e.source) && e.source.startsWith(nsPrefix)) {
       failures.push(`edge source ${e.source} not in modules`);
     }
-    if (!ids.has(e.target) && e.target.startsWith(`${init.adapterName}:`)) {
+    if (!ids.has(e.target) && e.target.startsWith(nsPrefix)) {
       failures.push(`edge target ${e.target} not in modules`);
     }
   }

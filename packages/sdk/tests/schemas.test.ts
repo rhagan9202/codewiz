@@ -166,6 +166,7 @@ describe("Adapter protocol", () => {
       adapterName: "@codewiz/adapter-ts",
       adapterVersion: "0.1.0",
       protocolVersion: 1,
+      idNamespace: "ts",
       capabilities: ["modules", "edges-imports"],
       fileGlobs: ["**/*.ts", "**/*.tsx"],
     };
