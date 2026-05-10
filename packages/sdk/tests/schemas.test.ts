@@ -227,3 +227,40 @@ describe("Manifest", () => {
     expect(ManifestSchema.parse(v)).toEqual(v);
   });
 });
+
+import { ProjectSchema } from "../src/project.js";
+
+describe("Project", () => {
+  it("accepts an empty project", () => {
+    const p = {
+      manifest: {
+        repoRoot: "/x", gitCommit: null, gitBranch: null,
+        adapters: [], llm: null,
+        generatedAt: "2026-05-10T00:00:00Z",
+        lastSuccessful: "2026-05-10T00:00:00Z",
+        contentHash: "0".repeat(64), protocolVersion: 1,
+      },
+      modules: [], edges: [], contracts: [], flows: [], diagnostics: [],
+    };
+    expect(ProjectSchema.parse(p)).toEqual(p);
+  });
+
+  it("accepts a project with one module", () => {
+    const p = {
+      manifest: {
+        repoRoot: "/x", gitCommit: null, gitBranch: null,
+        adapters: [{ name: "ts", version: "0.0.1" }], llm: null,
+        generatedAt: "2026-05-10T00:00:00Z",
+        lastSuccessful: "2026-05-10T00:00:00Z",
+        contentHash: "a".repeat(64), protocolVersion: 1,
+      },
+      modules: [{
+        id: "ts:src/App.tsx", name: "App", path: "src/App.tsx", language: "ts",
+        layer: { value: "ui", provenance: { source: "static" } },
+        kind: "page", loc: 12, citations: [{ path: "src/App.tsx", line: 1 }],
+      }],
+      edges: [], contracts: [], flows: [], diagnostics: [],
+    };
+    expect(ProjectSchema.parse(p)).toEqual(p);
+  });
+});
