@@ -33,7 +33,8 @@ codewiz/
 │   │   │   ├── module.ts           # Module, Edge schemas
 │   │   │   ├── contract.ts         # Contract, ContractIssue, Flow
 │   │   │   ├── adapter.ts          # LanguageAdapter, Init/Analyze, etc.
-│   │   │   └── conformance.ts      # runConformanceSuite()
+│   │   │   ├── conformance.ts      # runConformanceSuite()
+│   │   │   └── manifest.ts         # ManifestInput, Manifest, Zod schemas (browser-safe)
 │   │   └── tests/
 │   │       ├── schemas.test.ts
 │   │       └── conformance.test.ts
@@ -1175,6 +1176,8 @@ git add packages/sdk/
 git commit -m "feat(sdk): conformance harness validating adapter protocol"
 ```
 
+> **Note (post-implementation):** `ManifestInput` and `Manifest` were later moved from `@codewiz/core/src/persister.ts` into `@codewiz/sdk/src/manifest.ts` (with Zod schemas) so the Vite frontend can import them without pulling in Node-only modules (`node:fs`, `node:crypto`, `node:path`). See Task 13 and the `refactor(sdk)` commit.
+
 ---
 
 ## Task 8: Core package skeleton + Walker
@@ -2055,14 +2058,11 @@ import { mkdir, writeFile, rename } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import type { Module, Edge, Contract, Flow, Diagnostic } from "@codewiz/sdk";
+import type { Manifest, ManifestInput } from "@codewiz/sdk";
 
-export interface ManifestInput {
-  repoRoot: string;
-  gitCommit: string | null;
-  gitBranch: string | null;
-  adapters: { name: string; version: string }[];
-  llm: { provider: string; model: string } | null;
-}
+// NOTE: ManifestInput and Manifest are defined in @codewiz/sdk (manifest.ts)
+// so the Vite frontend can import them without pulling in Node-only modules.
+export type { Manifest, ManifestInput };
 
 export interface ProjectData {
   modules: Module[];
@@ -2070,13 +2070,6 @@ export interface ProjectData {
   contracts: Contract[];
   flows: Flow[];
   diagnostics: Diagnostic[];
-}
-
-export interface Manifest extends ManifestInput {
-  generatedAt: string;
-  lastSuccessful: string;
-  contentHash: string;
-  protocolVersion: 1;
 }
 
 async function atomicWrite(path: string, body: string): Promise<void> {

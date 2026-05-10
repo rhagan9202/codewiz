@@ -2,14 +2,9 @@ import { mkdir, writeFile, rename } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import type { Module, Edge, Contract, Flow, Diagnostic } from "@codewiz/sdk";
+import type { Manifest, ManifestInput } from "@codewiz/sdk";
 
-export interface ManifestInput {
-  repoRoot: string;
-  gitCommit: string | null;
-  gitBranch: string | null;
-  adapters: { name: string; version: string }[];
-  llm: { provider: string; model: string } | null;
-}
+export type { Manifest, ManifestInput };
 
 export interface ProjectData {
   modules: Module[];
@@ -17,13 +12,6 @@ export interface ProjectData {
   contracts: Contract[];
   flows: Flow[];
   diagnostics: Diagnostic[];
-}
-
-export interface Manifest extends ManifestInput {
-  generatedAt: string;
-  lastSuccessful: string;
-  contentHash: string;
-  protocolVersion: 1;
 }
 
 async function atomicWrite(path: string, body: string): Promise<void> {

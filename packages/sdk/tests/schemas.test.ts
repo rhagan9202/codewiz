@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ProvenanceSchema, SourceRefSchema, LayerKeySchema } from "../src/provenance.js";
+import { ManifestInputSchema, ManifestSchema } from "../src/manifest.js";
 import { ModuleSchema, EdgeSchema } from "../src/module.js";
 import { ContractSchema, FlowSchema } from "../src/contract.js";
 import {
@@ -196,5 +197,33 @@ describe("Adapter protocol", () => {
       httpEndpoints: [], diagnostics: [],
     };
     expect(AnalyzeResponseSchema.parse(resp)).toEqual(resp);
+  });
+});
+
+describe("Manifest", () => {
+  it("ManifestInput parses with nullable fields", () => {
+    const v = {
+      repoRoot: "/x",
+      gitCommit: null,
+      gitBranch: null,
+      adapters: [{ name: "ts", version: "0.0.1" }],
+      llm: null,
+    };
+    expect(ManifestInputSchema.parse(v)).toEqual(v);
+  });
+
+  it("Manifest extends ManifestInput with generated fields", () => {
+    const v = {
+      repoRoot: "/x",
+      gitCommit: "abc",
+      gitBranch: "main",
+      adapters: [],
+      llm: { provider: "anthropic", model: "claude-sonnet-4-6" },
+      generatedAt: "2026-05-10T00:00:00Z",
+      lastSuccessful: "2026-05-10T00:00:00Z",
+      contentHash: "0".repeat(64),
+      protocolVersion: 1,
+    };
+    expect(ManifestSchema.parse(v)).toEqual(v);
   });
 });
