@@ -1,7 +1,7 @@
 import { Project } from "ts-morph";
-import { relative } from "node:path";
+import { relative, basename } from "node:path";
 import type { Module } from "@codewiz/sdk";
-import { basename } from "node:path";
+import { classifyKind, classifyLayer } from "./classify.js";
 
 export function extractModules(project: Project, projectRoot: string): Module[] {
   return project.getSourceFiles().map((sf) => {
@@ -12,8 +12,8 @@ export function extractModules(project: Project, projectRoot: string): Module[] 
       name,
       path,
       language: path.endsWith(".js") || path.endsWith(".jsx") ? "js" : "ts",
-      layer: { value: "service" as const, provenance: { source: "static" as const } }, // refined in Task 16
-      kind: "component" as const,                                                       // refined in Task 16
+      layer: { value: classifyLayer(path), provenance: { source: "static" as const } },
+      kind: classifyKind(path),
       loc: sf.getEndLineNumber(),
       citations: [{ path, line: 1 }],
     };
