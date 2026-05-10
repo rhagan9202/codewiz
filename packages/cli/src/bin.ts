@@ -43,6 +43,22 @@ program
     process.exit(r.allOk ? 0 : 1);
   });
 
+import { runAnalyze } from "./analyze.js";
+import { resolve } from "node:path";
+
+program
+  .command("analyze [path]")
+  .description("Analyze a repository and write JSON to ./.codewiz/")
+  .action(async (pathArg: string | undefined) => {
+    const target = resolve(pathArg ?? ".");
+    const start = Date.now();
+    const manifest = await runAnalyze({ projectRoot: target });
+    const dur = ((Date.now() - start) / 1000).toFixed(2);
+    console.log(`  analyzed ${target}`);
+    console.log(`  contentHash ${manifest.contentHash.slice(0, 12)}…`);
+    console.log(`  done in ${dur}s`);
+  });
+
 program.parseAsync(process.argv).catch((e) => {
   console.error(e);
   process.exit(1);
