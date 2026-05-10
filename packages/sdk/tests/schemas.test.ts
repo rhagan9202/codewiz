@@ -2,6 +2,11 @@ import { describe, it, expect } from "vitest";
 import { ProvenanceSchema, SourceRefSchema, LayerKeySchema } from "../src/provenance.js";
 import { ModuleSchema, EdgeSchema } from "../src/module.js";
 import { ContractSchema, FlowSchema } from "../src/contract.js";
+import {
+  CapabilitySchema, InitRequestSchema, InitResponseSchema,
+  AnalyzeRequestSchema, AnalyzeResponseSchema,
+  HttpEndpointSchema, DiagnosticSchema,
+} from "../src/adapter.js";
 
 describe("Provenance", () => {
   it("accepts a static provenance", () => {
@@ -139,5 +144,56 @@ describe("Flow", () => {
       }],
     };
     expect(FlowSchema.parse(f)).toEqual(f);
+  });
+});
+
+describe("Adapter protocol", () => {
+  it("Capability accepts known values", () => {
+    expect(CapabilitySchema.parse("modules")).toBe("modules");
+    expect(CapabilitySchema.parse("edges-imports")).toBe("edges-imports");
+    expect(() => CapabilitySchema.parse("flows")).toThrow();
+  });
+
+  it("InitRequest requires protocolVersion 1", () => {
+    const r = { projectRoot: "/x", protocolVersion: 1 };
+    expect(InitRequestSchema.parse(r)).toEqual(r);
+    expect(() => InitRequestSchema.parse({ projectRoot: "/x", protocolVersion: 2 }))
+      .toThrow();
+  });
+
+  it("InitResponse is structurally valid", () => {
+    const r = {
+      adapterName: "@codewiz/adapter-ts",
+      adapterVersion: "0.1.0",
+      protocolVersion: 1,
+      capabilities: ["modules", "edges-imports"],
+      fileGlobs: ["**/*.ts", "**/*.tsx"],
+    };
+    expect(InitResponseSchema.parse(r)).toEqual(r);
+  });
+
+  it("HttpEndpoint requires verb + pathTemplate", () => {
+    const e = {
+      side: "client", verb: "POST",
+      pathTemplate: "/cart/items",
+      module: "ts:client.ts",
+      citation: { path: "client.ts", line: 12 },
+    };
+    expect(HttpEndpointSchema.parse(e)).toEqual(e);
+  });
+
+  it("Diagnostic has level + message", () => {
+    expect(DiagnosticSchema.parse({ level: "warn", message: "x" }))
+      .toEqual({ level: "warn", message: "x" });
+  });
+
+  it("AnalyzeRequest and AnalyzeResponse parse round-trip", () => {
+    const req = { files: ["a.ts", "b.ts"] };
+    expect(AnalyzeRequestSchema.parse(req)).toEqual(req);
+    const resp = {
+      modules: [], edges: [], contracts: [],
+      httpEndpoints: [], diagnostics: [],
+    };
+    expect(AnalyzeResponseSchema.parse(resp)).toEqual(resp);
   });
 });
