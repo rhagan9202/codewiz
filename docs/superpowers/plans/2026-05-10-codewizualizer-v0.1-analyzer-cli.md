@@ -3124,6 +3124,7 @@ export function createTsAdapter(): LanguageAdapter {
         adapterName: "@codewiz/adapter-ts",
         adapterVersion: "0.0.1",
         protocolVersion: 1,
+        idNamespace: "ts",
         capabilities: ["modules", "edges-imports", "contracts", "http-endpoints"],
         fileGlobs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
       };
