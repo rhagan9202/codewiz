@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { ProvenanceSchema, SourceRefSchema, LayerKeySchema } from "../src/provenance.js";
 import { ModuleSchema, EdgeSchema } from "../src/module.js";
+import { ContractSchema, FlowSchema } from "../src/contract.js";
 
 describe("Provenance", () => {
   it("accepts a static provenance", () => {
@@ -94,5 +95,49 @@ describe("Edge", () => {
       provenance: { source: "bridge", confidence: 0.9 },
     };
     expect(EdgeSchema.parse(e)).toEqual(e);
+  });
+});
+
+describe("Contract", () => {
+  it("accepts a contract with a single field and one issue", () => {
+    const c = {
+      id: "User",
+      name: "User",
+      language: "ts",
+      fields: [
+        {
+          name: "id", type: "string", required: true,
+          provenance: { source: "static" },
+        },
+      ],
+      producers: ["ts:auth/User.ts"],
+      consumers: ["ts:web/Header.tsx"],
+      issues: [{
+        kind: "missing", field: "name",
+        consumer: "ts:web/Header.tsx", producer: "ts:auth/User.ts",
+        expected: { name: "name", type: "string", required: true,
+                    source: "Header.tsx:12", snippet: "<span>{u.name}</span>" },
+        actual:   { name: "name", type: "string", required: false,
+                    source: "User.ts:5",      snippet: "name?: string;" },
+        provenance: { source: "static" },
+      }],
+      related: [],
+      citations: [{ path: "auth/User.ts", line: 1 }],
+    };
+    expect(ContractSchema.parse(c)).toEqual(c);
+  });
+});
+
+describe("Flow", () => {
+  it("accepts a functional flow with steps", () => {
+    const f = {
+      id: "f_buy", name: "Buy", desc: "purchase flow",
+      kind: "functional", health: "ok",
+      steps: [{
+        mod: "ts:web/Cart.tsx", action: "click buy",
+        provenance: { source: "annotation", file: ".codewiz.yml", line: 8 },
+      }],
+    };
+    expect(FlowSchema.parse(f)).toEqual(f);
   });
 });
