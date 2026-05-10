@@ -1,6 +1,7 @@
 {
   "name": "codewiz",
   "version": "0.0.1",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/bin.js",
   "bin": { "codewiz": "./dist/bin.js" },
