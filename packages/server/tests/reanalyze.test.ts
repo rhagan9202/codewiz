@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runReanalyze } from "../src/analyzer.js";
 import { EventBus } from "../src/events.js";
+import { createServer } from "../src/index.js";
 
 let dir: string;
 beforeEach(() => {
@@ -48,5 +49,29 @@ describe("EventBus", () => {
     bus.publish({ type: "pong" });
     expect(a).toEqual(["ping"]);
     expect(b).toEqual(["ping", "pong"]);
+  });
+});
+
+describe("POST /api/reanalyze", () => {
+  it("returns 202 immediately and runs analysis in background", async () => {
+    mkdirSync(join(dir, "src"), { recursive: true });
+    writeFileSync(join(dir, "src/a.ts"), "export const A = 1;");
+    const app = createServer({ projectRoot: dir, webDist: null });
+    const res = await app.fetch(new Request("http://localhost/api/reanalyze", { method: "POST" }));
+    expect(res.status).toBe(202);
+    const body = await res.json();
+    expect(body.queued).toBe(true);
+    // Wait for background analysis to complete (small fixture, <1s).
+    for (let i = 0; i < 50; i++) {
+      await new Promise((r) => setTimeout(r, 50));
+      try {
+        const probe = await app.fetch(new Request("http://localhost/api/project"));
+        if (probe.status === 200) {
+          const project = await probe.json();
+          if (project.manifest.contentHash) return;
+        }
+      } catch {}
+    }
+    throw new Error("analysis did not complete in 2.5s");
   });
 });
