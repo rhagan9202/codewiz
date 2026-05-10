@@ -87,6 +87,7 @@ Replace the file with:
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/bin.js",
+  "types": "./dist/bin.d.ts",
   "bin": { "codewiz": "./dist/bin.js" },
   "files": ["dist"],
   "scripts": {
@@ -660,6 +661,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
 How this workflow behaves:
