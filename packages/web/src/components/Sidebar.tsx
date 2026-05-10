@@ -97,6 +97,7 @@ export function Sidebar({ view, setView, modules, selectedId, onSelect, query, s
               className={`nav-item ${view === it.id ? "active" : ""}`}
               style={isDisabled ? { opacity: 0.4, cursor: "not-allowed" } : {}}
               title={title}
+              aria-disabled={isDisabled || undefined}
               onClick={isDisabled ? undefined : () => setView(it.id)}
             >
               <span className="ico">{it.icon}</span>

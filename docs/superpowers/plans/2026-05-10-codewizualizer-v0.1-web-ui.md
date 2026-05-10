@@ -1650,6 +1650,7 @@ export function Sidebar({ view, setView, modules, selectedId, onSelect, query, s
               className={`nav-item ${view === it.id ? "active" : ""}`}
               style={isDisabled ? { opacity: 0.4, cursor: "not-allowed" } : {}}
               title={title}
+              aria-disabled={isDisabled || undefined}
               onClick={isDisabled ? undefined : () => setView(it.id)}
             >
               <span className="ico">{it.icon}</span>
@@ -1985,7 +1986,7 @@ export function ArchitectureView({ project, selected, onSelect }: Props) {
             "var(--cyan)";
           const my = (a.y + b.y) / 2;
           return (
-            <path key={i}
+            <path key={`${e.source}|${e.target}|${e.kind}|${i}`}
                   d={`M ${a.x} ${a.y} C ${a.x} ${my}, ${b.x} ${my}, ${b.x} ${b.y}`}
                   stroke={c} fill="none" strokeWidth="1"
                   opacity={dim ? 0.04 : 0.32}
