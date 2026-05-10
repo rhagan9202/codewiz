@@ -6,7 +6,7 @@
   "bin": { "codewiz": "./dist/bin.js" },
   "files": ["dist"],
   "scripts": {
-    "build": "tsc",
+    "build": "node scripts/copy-web-bundle.mjs && tsc",
     "test": "vitest run",
     "lint": "eslint src tests",
     "typecheck": "tsc --noEmit"
@@ -14,13 +14,13 @@
   "dependencies": {
     "@codewiz/core": "workspace:*",
     "@codewiz/adapter-ts": "workspace:*",
-    "@codewiz/sdk": "workspace:*",
     "@codewiz/server": "workspace:*",
-    "@codewiz/web": "workspace:*",
+    "@codewiz/sdk": "workspace:*",
     "commander": "^12.1.0",
     "open": "^10.1.0"
   },
   "devDependencies": {
+    "@codewiz/web": "workspace:*",
     "@types/node": "^22.0.0",
     "typescript": "^5.6.3",
     "vitest": "^2.1.0"

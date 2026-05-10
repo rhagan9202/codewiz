@@ -72,9 +72,6 @@ importers:
       '@codewiz/server':
         specifier: workspace:*
         version: link:../server
-      '@codewiz/web':
-        specifier: workspace:*
-        version: link:../web
       commander:
         specifier: ^12.1.0
         version: 12.1.0
@@ -82,6 +79,9 @@ importers:
         specifier: ^10.1.0
         version: 10.2.0
     devDependencies:
+      '@codewiz/web':
+        specifier: workspace:*
+        version: link:../web
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.18
