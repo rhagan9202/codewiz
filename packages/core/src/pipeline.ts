@@ -48,7 +48,7 @@ export async function runAnalysis(opts: RunAnalysisOptions): Promise<Manifest> {
     const responses = await Promise.all(
       inits.map(async ({ adapter, init }) => {
         const files = await walk(projectRoot, init.fileGlobs, {
-          exclude: annotations?.exclude,
+          exclude: annotations?.exclude ?? [],
         });
         return adapter.analyze({ files });
       }),
