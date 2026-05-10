@@ -33,7 +33,10 @@ async function atomicWrite(path: string, body: string): Promise<void> {
 }
 
 function hashContent(data: ProjectData): string {
-  // canonical JSON: stable key ordering at the top level
+  // Note: the outer keys (modules/edges/contracts/flows) are stable, but
+  // nested object key ordering follows insertion order from each adapter.
+  // For v0.1 this is fine; if cross-version stability is needed later,
+  // swap in a true canonical JSON serializer.
   const canon = JSON.stringify({
     modules: data.modules,
     edges: data.edges,

@@ -42,48 +42,50 @@ export async function runAnalysis(opts: RunAnalysisOptions): Promise<Manifest> {
     })),
   );
 
-  // Walk + dispatch per adapter
-  const responses = await Promise.all(
-    inits.map(async ({ adapter, init }) => {
-      const files = await walk(projectRoot, init.fileGlobs, {
-        exclude: annotations?.exclude,
-      });
-      return adapter.analyze({ files });
-    }),
-  );
+  let manifest: Manifest;
+  try {
+    // Walk + dispatch per adapter
+    const responses = await Promise.all(
+      inits.map(async ({ adapter, init }) => {
+        const files = await walk(projectRoot, init.fileGlobs, {
+          exclude: annotations?.exclude,
+        });
+        return adapter.analyze({ files });
+      }),
+    );
 
-  // Shutdown
-  await Promise.all(inits.map(({ adapter }) => adapter.shutdown()));
+    // Aggregate
+    const project = aggregate(responses);
 
-  // Aggregate
-  const project = aggregate(responses);
+    // Bridge resolution
+    const bridgeEdges = resolveBridges(project.httpEndpoints);
+    const allEdges: Edge[] = [...project.edges, ...bridgeEdges];
 
-  // Bridge resolution
-  const bridgeEdges = resolveBridges(project.httpEndpoints);
-  const allEdges: Edge[] = [...project.edges, ...bridgeEdges];
+    // Annotations
+    let annotated: Module[] = project.modules;
+    if (annotations) {
+      annotated = applyAnnotations(project.modules, annotations, ".codewiz.yml");
+    }
 
-  // Annotations
-  let annotated: Module[] = project.modules;
-  if (annotations) {
-    annotated = applyAnnotations(project.modules, annotations, ".codewiz.yml");
+    // Persist
+    manifest = await persist(
+      projectRoot,
+      {
+        repoRoot: projectRoot,
+        gitCommit: null, gitBranch: null,
+        adapters: inits.map(({ init }) => ({ name: init.adapterName, version: init.adapterVersion })),
+        llm: opts.llm ?? null,
+      },
+      {
+        modules: annotated,
+        edges: allEdges,
+        contracts: project.contracts,
+        flows: [],   // v0.1 flows are not yet emitted
+        diagnostics: [...project.diagnostics, ...annotationDiagnostics],
+      },
+    );
+  } finally {
+    await Promise.all(inits.map(({ adapter }) => adapter.shutdown()));
   }
-
-  // Persist
-  const manifest = await persist(
-    projectRoot,
-    {
-      repoRoot: projectRoot,
-      gitCommit: null, gitBranch: null,
-      adapters: inits.map(({ init }) => ({ name: init.adapterName, version: init.adapterVersion })),
-      llm: opts.llm ?? null,
-    },
-    {
-      modules: annotated,
-      edges: allEdges,
-      contracts: project.contracts,
-      flows: [],   // v0.1 flows are not yet emitted
-      diagnostics: [...project.diagnostics, ...annotationDiagnostics],
-    },
-  );
   return manifest;
 }

@@ -1637,11 +1637,9 @@ Run: `pnpm --filter @codewiz/core test`
 ```ts
 import type { Edge, HttpEndpoint } from "@codewiz/sdk";
 
-const PARAM_RE = /[:{<]([a-zA-Z_][a-zA-Z0-9_]*)[}>]?/g;
-
 function normalize(p: string): string {
   // Treat :id, {id}, <id> as the same wildcard token.
-  return p.replace(PARAM_RE, ":_");
+  return p.replace(/[:{<]([a-zA-Z_][a-zA-Z0-9_]*)[}>]?/g, ":_");
 }
 
 export function resolveBridges(endpoints: HttpEndpoint[]): Edge[] {
@@ -2088,7 +2086,10 @@ async function atomicWrite(path: string, body: string): Promise<void> {
 }
 
 function hashContent(data: ProjectData): string {
-  // canonical JSON: stable key ordering at the top level
+  // Note: the outer keys (modules/edges/contracts/flows) are stable, but
+  // nested object key ordering follows insertion order from each adapter.
+  // For v0.1 this is fine; if cross-version stability is needed later,
+  // swap in a true canonical JSON serializer.
   const canon = JSON.stringify({
     modules: data.modules,
     edges: data.edges,
@@ -2230,6 +2231,30 @@ classify:
     expect(modules[0].layer.value).toBe("ui");
     expect(modules[0].layer.provenance.source).toBe("annotation");
   });
+
+  it("shuts down adapters even when analyze throws", async () => {
+    const shutdownCalls: string[] = [];
+    const failingAdapter: LanguageAdapter = {
+      async initialize() {
+        return {
+          adapterName: "@codewiz/failing",
+          adapterVersion: "0.0.0",
+          protocolVersion: 1,
+          idNamespace: "fail",
+          capabilities: ["modules"],
+          fileGlobs: ["**/*.fail"],
+        };
+      },
+      async analyze() { throw new Error("boom"); },
+      async shutdown() { shutdownCalls.push("failing"); },
+    };
+    const reg = new AdapterRegistry();
+    reg.register("failing", () => failingAdapter);
+    await expect(
+      runAnalysis({ projectRoot: dir, adapters: ["failing"], registry: reg })
+    ).rejects.toThrow(/boom/);
+    expect(shutdownCalls).toEqual(["failing"]);
+  });
 });
 ```
 
@@ -2284,49 +2309,51 @@ export async function runAnalysis(opts: RunAnalysisOptions): Promise<Manifest> {
     })),
   );
 
-  // Walk + dispatch per adapter
-  const responses = await Promise.all(
-    inits.map(async ({ adapter, init }) => {
-      const files = await walk(projectRoot, init.fileGlobs, {
-        exclude: annotations?.exclude,
-      });
-      return adapter.analyze({ files });
-    }),
-  );
+  let manifest: Manifest;
+  try {
+    // Walk + dispatch per adapter
+    const responses = await Promise.all(
+      inits.map(async ({ adapter, init }) => {
+        const files = await walk(projectRoot, init.fileGlobs, {
+          exclude: annotations?.exclude,
+        });
+        return adapter.analyze({ files });
+      }),
+    );
 
-  // Shutdown
-  await Promise.all(inits.map(({ adapter }) => adapter.shutdown()));
+    // Aggregate
+    const project = aggregate(responses);
 
-  // Aggregate
-  const project = aggregate(responses);
+    // Bridge resolution
+    const bridgeEdges = resolveBridges(project.httpEndpoints);
+    const allEdges: Edge[] = [...project.edges, ...bridgeEdges];
 
-  // Bridge resolution
-  const bridgeEdges = resolveBridges(project.httpEndpoints);
-  const allEdges: Edge[] = [...project.edges, ...bridgeEdges];
+    // Annotations
+    let annotated: Module[] = project.modules;
+    if (annotations) {
+      annotated = applyAnnotations(project.modules, annotations, ".codewiz.yml");
+    }
 
-  // Annotations
-  let annotated: Module[] = project.modules;
-  if (annotations) {
-    annotated = applyAnnotations(project.modules, annotations, ".codewiz.yml");
+    // Persist
+    manifest = await persist(
+      projectRoot,
+      {
+        repoRoot: projectRoot,
+        gitCommit: null, gitBranch: null,
+        adapters: inits.map(({ init }) => ({ name: init.adapterName, version: init.adapterVersion })),
+        llm: opts.llm ?? null,
+      },
+      {
+        modules: annotated,
+        edges: allEdges,
+        contracts: project.contracts,
+        flows: [],   // v0.1 flows are not yet emitted
+        diagnostics: [...project.diagnostics, ...annotationDiagnostics],
+      },
+    );
+  } finally {
+    await Promise.all(inits.map(({ adapter }) => adapter.shutdown()));
   }
-
-  // Persist
-  const manifest = await persist(
-    projectRoot,
-    {
-      repoRoot: projectRoot,
-      gitCommit: null, gitBranch: null,
-      adapters: inits.map(({ init }) => ({ name: init.adapterName, version: init.adapterVersion })),
-      llm: opts.llm ?? null,
-    },
-    {
-      modules: annotated,
-      edges: allEdges,
-      contracts: project.contracts,
-      flows: [],   // v0.1 flows are not yet emitted
-      diagnostics: [...project.diagnostics, ...annotationDiagnostics],
-    },
-  );
   return manifest;
 }
 ```
@@ -3942,3 +3969,12 @@ Acceptance #2, #3, #4, #6 require the web server, frontend, and Playwright — t
 ```bash
 git tag -a v0.1.0-foundation -m "v0.1 foundation: analyzer CLI works end-to-end on tiny-react-app"
 ```
+
+---
+
+## Known issues (deferred to post-v0.1)
+
+- **Walker doesn't merge subdirectory `.gitignore` files** — only root `.gitignore` is honored (acceptable for v0.1; real repos with nested gitignores will see expected-excluded files in output)
+- **`Manifest.lastSuccessful` is always set to `now`** — placeholder for future read-previous-manifest semantics
+- **`Walker` path-normalization on Windows** — current `split(sep).join(posix.sep)` is a no-op since fast-glob returns POSIX paths; would need work for proper Windows support
+- **Pipeline drops parse-error diagnostics on `.codewiz.yml` failure** — error message is thrown but the structured `Diagnostic[]` doesn't make it into `diagnostics.json`

@@ -72,4 +72,28 @@ classify:
     expect(modules[0].layer.value).toBe("ui");
     expect(modules[0].layer.provenance.source).toBe("annotation");
   });
+
+  it("shuts down adapters even when analyze throws", async () => {
+    const shutdownCalls: string[] = [];
+    const failingAdapter: LanguageAdapter = {
+      async initialize() {
+        return {
+          adapterName: "@codewiz/failing",
+          adapterVersion: "0.0.0",
+          protocolVersion: 1,
+          idNamespace: "fail",
+          capabilities: ["modules"],
+          fileGlobs: ["**/*.fail"],
+        };
+      },
+      async analyze() { throw new Error("boom"); },
+      async shutdown() { shutdownCalls.push("failing"); },
+    };
+    const reg = new AdapterRegistry();
+    reg.register("failing", () => failingAdapter);
+    await expect(
+      runAnalysis({ projectRoot: dir, adapters: ["failing"], registry: reg })
+    ).rejects.toThrow(/boom/);
+    expect(shutdownCalls).toEqual(["failing"]);
+  });
 });

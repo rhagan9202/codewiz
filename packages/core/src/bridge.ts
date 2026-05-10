@@ -1,10 +1,8 @@
 import type { Edge, HttpEndpoint } from "@codewiz/sdk";
 
-const PARAM_RE = /[:{<]([a-zA-Z_][a-zA-Z0-9_]*)[}>]?/g;
-
 function normalize(p: string): string {
   // Treat :id, {id}, <id> as the same wildcard token.
-  return p.replace(PARAM_RE, ":_");
+  return p.replace(/[:{<]([a-zA-Z_][a-zA-Z0-9_]*)[}>]?/g, ":_");
 }
 
 export function resolveBridges(endpoints: HttpEndpoint[]): Edge[] {
