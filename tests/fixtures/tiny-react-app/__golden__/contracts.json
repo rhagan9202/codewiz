@@ -1,0 +1,37 @@
+[
+  {
+    "id": "ts:web/src/types/CartItem.ts::CartItem",
+    "name": "CartItem",
+    "language": "ts",
+    "fields": [
+      {
+        "name": "productId",
+        "type": "string",
+        "required": true,
+        "provenance": {
+          "source": "static"
+        }
+      },
+      {
+        "name": "quantity",
+        "type": "number",
+        "required": true,
+        "provenance": {
+          "source": "static"
+        }
+      }
+    ],
+    "producers": [
+      "ts:web/src/types/CartItem.ts"
+    ],
+    "consumers": [],
+    "issues": [],
+    "related": [],
+    "citations": [
+      {
+        "path": "web/src/types/CartItem.ts",
+        "line": 1
+      }
+    ]
+  }
+]

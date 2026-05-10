@@ -8,6 +8,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
+  "dependencies": {
+    "codewiz": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "^5.6.3",
     "vitest": "^2.1.0"
