@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ProvenanceSchema, SourceRefSchema, LayerKeySchema } from "../src/provenance.js";
+import { ModuleSchema, EdgeSchema } from "../src/module.js";
 
 describe("Provenance", () => {
   it("accepts a static provenance", () => {
@@ -50,5 +51,48 @@ describe("SourceRef", () => {
     expect(SourceRefSchema.parse({ path: "a.ts", line: 5, col: 10 })).toEqual({
       path: "a.ts", line: 5, col: 10,
     });
+  });
+});
+
+describe("Module", () => {
+  it("accepts a minimal module record", () => {
+    const m = {
+      id: "ts:web/src/App.tsx",
+      name: "App",
+      path: "web/src/App.tsx",
+      language: "ts",
+      layer: { value: "ui", provenance: { source: "static" } },
+      kind: "page",
+      loc: 42,
+      citations: [{ path: "web/src/App.tsx", line: 1 }],
+    };
+    expect(ModuleSchema.parse(m)).toEqual(m);
+  });
+
+  it("rejects an unknown kind", () => {
+    expect(() => ModuleSchema.parse({
+      id: "x", name: "X", path: "x", language: "ts",
+      layer: { value: "ui", provenance: { source: "static" } },
+      kind: "weirdo", loc: 0, citations: [],
+    })).toThrow();
+  });
+});
+
+describe("Edge", () => {
+  it("accepts a static imports edge", () => {
+    const e = {
+      source: "ts:a.ts", target: "ts:b.ts",
+      kind: "imports", provenance: { source: "static" },
+    };
+    expect(EdgeSchema.parse(e)).toEqual(e);
+  });
+
+  it("accepts a bridge http edge with confidence", () => {
+    const e = {
+      source: "ts:client.ts", target: "py:routes/x.py",
+      kind: "http",
+      provenance: { source: "bridge", confidence: 0.9 },
+    };
+    expect(EdgeSchema.parse(e)).toEqual(e);
   });
 });
