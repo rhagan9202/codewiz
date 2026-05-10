@@ -156,12 +156,16 @@ packages:
       "dependsOn": ["^build"]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "outputs": []
     },
     "typecheck": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "outputs": []
     },
-    "lint": {}
+    "lint": {
+      "outputs": []
+    }
   }
 }
 ```
@@ -185,9 +189,7 @@ packages:
     "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "rootDir": "src"
+    "sourceMap": true
   }
 }
 ```
