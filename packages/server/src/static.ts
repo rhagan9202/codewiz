@@ -43,13 +43,13 @@ export function staticRoutes(webDist: string): Hono {
     const direct = await tryRead(target);
     if (direct) {
       c.header("Content-Type", direct.mime);
-      return c.body(direct.body);
+      return c.body(new Uint8Array(direct.body));
     }
     // SPA fallback — always served from index.html (already inside root).
     const fallback = await tryRead(join(root, "index.html"));
     if (fallback) {
       c.header("Content-Type", fallback.mime);
-      return c.body(fallback.body);
+      return c.body(new Uint8Array(fallback.body));
     }
     return c.notFound();
   });

@@ -59,6 +59,31 @@ program
     console.log(`  done in ${dur}s`);
   });
 
+import { runServe } from "./serve.js";
+
+program
+  .command("serve [path]")
+  .description("Serve the codeWizualizer web UI for the given repo")
+  .option("--port <n>", "Port to bind on 127.0.0.1", "8765")
+  .option("--no-open", "Don't auto-open the browser")
+  .action(async (pathArg: string | undefined, opts: { port: string; open: boolean }) => {
+    const target = resolve(pathArg ?? ".");
+    const port = parseInt(opts.port, 10);
+    if (Number.isNaN(port) || port < 1 || port > 65535) {
+      console.error(`invalid --port: ${opts.port}`);
+      process.exit(1);
+    }
+    const handle = await runServe({
+      projectRoot: target,
+      port,
+      noOpen: !opts.open,
+    });
+    console.log(`  press Ctrl-C to stop`);
+    process.on("SIGINT", () => {
+      void handle.close().then(() => process.exit(0));
+    });
+  });
+
 program.parseAsync(process.argv).catch((e) => {
   console.error(e);
   process.exit(1);

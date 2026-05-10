@@ -15,7 +15,10 @@
     "@codewiz/core": "workspace:*",
     "@codewiz/adapter-ts": "workspace:*",
     "@codewiz/sdk": "workspace:*",
-    "commander": "^12.1.0"
+    "@codewiz/server": "workspace:*",
+    "@codewiz/web": "workspace:*",
+    "commander": "^12.1.0",
+    "open": "^10.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
