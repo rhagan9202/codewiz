@@ -18,6 +18,31 @@ program
     for (const f of result.skipped) console.log(`  skipped  ${f} (already exists)`);
   });
 
+import { runDoctor } from "./doctor.js";
+import { AdapterRegistry } from "@codewiz/core";
+import { createTsAdapter } from "@codewiz/adapter-ts";
+
+function buildRegistry(): AdapterRegistry {
+  const reg = new AdapterRegistry();
+  reg.register("ts", createTsAdapter);
+  return reg;
+}
+
+program
+  .command("doctor")
+  .description("Verify adapter health")
+  .action(async () => {
+    const r = await runDoctor({
+      projectRoot: process.cwd(),
+      registry: buildRegistry(),
+      adapters: ["ts"],
+    });
+    for (const res of r.results) {
+      console.log(`  ${res.ok ? "✓" : "✗"} ${res.name}${res.error ? ` — ${res.error}` : ""}`);
+    }
+    process.exit(r.allOk ? 0 : 1);
+  });
+
 program.parseAsync(process.argv).catch((e) => {
   console.error(e);
   process.exit(1);
