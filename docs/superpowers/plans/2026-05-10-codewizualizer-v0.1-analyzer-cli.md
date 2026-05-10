@@ -231,7 +231,7 @@ git commit -m "chore: bootstrap pnpm workspace + Turborepo + base tsconfig"
 
 Run:
 ```
-pnpm add -Dw vitest @vitest/coverage-v8 \
+pnpm add -Dw vitest@^2.1.0 @vitest/coverage-v8@^2.1.0 \
   eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin \
   eslint-config-prettier
 ```
