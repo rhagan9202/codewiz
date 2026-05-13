@@ -1,12 +1,16 @@
 {
   "name": "codewiz",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "MIT",
   "type": "module",
   "main": "./dist/bin.js",
   "types": "./dist/bin.d.ts",
-  "bin": { "codewiz": "./dist/bin.js" },
-  "files": ["dist"],
+  "bin": {
+    "codewiz": "./dist/bin.js"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "node scripts/copy-web-bundle.mjs && tsc",
     "test": "vitest run",

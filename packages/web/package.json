@@ -3,7 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "files": ["dist", "index.html"],
+  "files": [
+    "dist",
+    "index.html"
+  ],
   "scripts": {
     "build": "vite build",
     "dev": "vite",
