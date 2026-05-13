@@ -1,0 +1,72 @@
+[
+  {
+    "source": "ts:web/src/pages/Cart.tsx",
+    "target": "ts:web/src/components/Button.tsx",
+    "kind": "imports",
+    "provenance": {
+      "source": "static"
+    },
+    "evidence": [
+      {
+        "path": "web/src/pages/Cart.tsx",
+        "line": 1
+      }
+    ]
+  },
+  {
+    "source": "ts:web/src/pages/Cart.tsx",
+    "target": "ts:web/src/api/client.ts",
+    "kind": "imports",
+    "provenance": {
+      "source": "static"
+    },
+    "evidence": [
+      {
+        "path": "web/src/pages/Cart.tsx",
+        "line": 2
+      }
+    ]
+  },
+  {
+    "source": "ts:web/src/pages/Cart.tsx",
+    "target": "ts:web/src/types/CartItem.ts",
+    "kind": "imports",
+    "provenance": {
+      "source": "static"
+    },
+    "evidence": [
+      {
+        "path": "web/src/pages/Cart.tsx",
+        "line": 3
+      }
+    ]
+  },
+  {
+    "source": "ts:web/src/pages/Home.tsx",
+    "target": "ts:web/src/components/Button.tsx",
+    "kind": "imports",
+    "provenance": {
+      "source": "static"
+    },
+    "evidence": [
+      {
+        "path": "web/src/pages/Home.tsx",
+        "line": 1
+      }
+    ]
+  },
+  {
+    "source": "ts:web/src/pages/Home.tsx",
+    "target": "ts:web/src/api/client.ts",
+    "kind": "imports",
+    "provenance": {
+      "source": "static"
+    },
+    "evidence": [
+      {
+        "path": "web/src/pages/Home.tsx",
+        "line": 2
+      }
+    ]
+  }
+]

@@ -1,0 +1,112 @@
+[
+  {
+    "id": "ts:web/src/api/client.ts",
+    "name": "client",
+    "path": "web/src/api/client.ts",
+    "language": "ts",
+    "layer": {
+      "value": "api",
+      "provenance": {
+        "source": "static"
+      }
+    },
+    "kind": "client",
+    "loc": 6,
+    "citations": [
+      {
+        "path": "web/src/api/client.ts",
+        "line": 1
+      }
+    ]
+  },
+  {
+    "id": "ts:web/src/components/Button.tsx",
+    "name": "Button",
+    "path": "web/src/components/Button.tsx",
+    "language": "ts",
+    "layer": {
+      "value": "ui",
+      "provenance": {
+        "source": "static"
+      }
+    },
+    "kind": "component",
+    "loc": 4,
+    "citations": [
+      {
+        "path": "web/src/components/Button.tsx",
+        "line": 1
+      }
+    ],
+    "domain": {
+      "value": "core",
+      "provenance": {
+        "source": "annotation",
+        "file": ".codewiz.yml",
+        "line": 0
+      }
+    }
+  },
+  {
+    "id": "ts:web/src/pages/Cart.tsx",
+    "name": "Cart",
+    "path": "web/src/pages/Cart.tsx",
+    "language": "ts",
+    "layer": {
+      "value": "ui",
+      "provenance": {
+        "source": "static"
+      }
+    },
+    "kind": "page",
+    "loc": 9,
+    "citations": [
+      {
+        "path": "web/src/pages/Cart.tsx",
+        "line": 1
+      }
+    ],
+    "notes": "needs e2e coverage",
+    "annotation": "warn"
+  },
+  {
+    "id": "ts:web/src/pages/Home.tsx",
+    "name": "Home",
+    "path": "web/src/pages/Home.tsx",
+    "language": "ts",
+    "layer": {
+      "value": "ui",
+      "provenance": {
+        "source": "static"
+      }
+    },
+    "kind": "page",
+    "loc": 7,
+    "citations": [
+      {
+        "path": "web/src/pages/Home.tsx",
+        "line": 1
+      }
+    ]
+  },
+  {
+    "id": "ts:web/src/types/CartItem.ts",
+    "name": "CartItem",
+    "path": "web/src/types/CartItem.ts",
+    "language": "ts",
+    "layer": {
+      "value": "service",
+      "provenance": {
+        "source": "static"
+      }
+    },
+    "kind": "component",
+    "loc": 5,
+    "citations": [
+      {
+        "path": "web/src/types/CartItem.ts",
+        "line": 1
+      }
+    ]
+  }
+]

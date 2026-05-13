@@ -1,0 +1,9 @@
+{
+  "adapters": [
+    {
+      "name": "@codewiz/adapter-ts"
+    }
+  ],
+  "contentHashLength": 64,
+  "protocolVersion": 1
+}

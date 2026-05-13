@@ -1,0 +1,5 @@
+classify:
+  pin:
+    "web/src/components/Button.tsx": { domain: core }
+review:
+  - { path: "web/src/pages/Cart.tsx", level: warn, note: "needs e2e coverage" }
