@@ -70,7 +70,9 @@ describe("POST /api/reanalyze", () => {
           const project = await probe.json();
           if (project.manifest.contentHash) return;
         }
-      } catch {}
+      } catch {
+        // analysis may fail during setup; retry
+      }
     }
     throw new Error("analysis did not complete in 2.5s");
   });

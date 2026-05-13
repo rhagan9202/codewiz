@@ -16,8 +16,9 @@ export function ArchitectureView({ project, selected, onSelect }: Props) {
 
   useEffect(() => {
     if (!wrapRef.current) return;
-    const ro = new ResizeObserver(([e]) => {
-      setSize({ w: e.contentRect.width, h: e.contentRect.height });
+    const ro = new ResizeObserver((entries) => {
+      const e = entries[0];
+      if (e) setSize({ w: e.contentRect.width, h: e.contentRect.height });
     });
     ro.observe(wrapRef.current);
     return () => ro.disconnect();

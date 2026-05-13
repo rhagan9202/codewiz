@@ -88,6 +88,61 @@ codeWizualizer is a [pnpm](https://pnpm.io/) workspace with five packages:
 
 The full spec is in [`docs/superpowers/specs/`](docs/superpowers/specs/).
 
+## Local development & testing
+
+### Setup
+
+Ensure you have **Node.js 24 or newer** (CI runs against Node 24). Check your version:
+
+```bash
+node -v      # should be >= v24
+pnpm -v      # should be >= 9.x
+```
+
+### Build + validate (full test workflow)
+
+From repo root:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm -r build              # Build all packages
+pnpm lint                  # ESLint all packages
+pnpm typecheck             # TypeScript strict check
+pnpm test                  # Unit + integration tests (Vitest)
+pnpm --filter @codewiz/tests exec playwright install --with-deps chromium
+pnpm --filter @codewiz/tests test:e2e    # Playwright e2e
+```
+
+Each step runs Turbo with cache, so subsequent runs are fast.
+
+### CLI manual smoke test
+
+The monorepo does not expose `codewiz` as a root-level executable, so always use the full path from repo root:
+
+```bash
+node packages/cli/dist/bin.js doctor              # Verify adapters
+node packages/cli/dist/bin.js analyze .           # Analyze this repo → .codewiz/
+node packages/cli/dist/bin.js serve . --port 8770 --no-open  # Start UI server
+```
+
+Then open: `http://127.0.0.1:8770/`
+
+### Port & server tips
+
+- Default port is `8765`. If it's already in use, specify a different one: `--port 8770`
+- Check which process owns a port: `ss -ltnp | grep ':8765'`
+- If you see `python3`, a conflicting HTTP server is running; either stop it or use a different port
+- UI serves from `index.html` (SPA fallback); if you see a directory listing, ensure the right port is serving CodeWiz
+
+### Pass criteria for manual UI test
+
+1. App renders without blank screen
+2. Architecture view shows nodes/edges
+3. Files view lists file rows
+4. Provenance badges (`static`, `annotation`, etc.) render
+5. Re-analyze button triggers progress updates
+6. No broken requests in browser network tab
+
 ## Roadmap
 
 - **v0.1** (current) — TypeScript/JavaScript only, Architecture + Files views.
