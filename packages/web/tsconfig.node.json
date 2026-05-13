@@ -6,8 +6,7 @@
     "outDir": "dist-node",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "allowSyntheticDefaultImports": true,
-    "noEmit": true
+    "allowSyntheticDefaultImports": true
   },
   "include": ["vite.config.ts"]
 }

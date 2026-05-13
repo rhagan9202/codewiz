@@ -12,13 +12,13 @@ async function readJson<T>(path: string, schema: z.ZodSchema<T>): Promise<T> {
   try {
     text = await readFile(path, "utf8");
   } catch (e) {
-    throw new Error(`failed to read ${path}: ${(e as Error).message}`);
+    throw new Error(`failed to read ${path}: ${(e as Error).message}`, { cause: e });
   }
   let raw: unknown;
   try {
     raw = JSON.parse(text);
   } catch (e) {
-    throw new Error(`failed to parse ${path}: ${(e as Error).message}`);
+    throw new Error(`failed to parse ${path}: ${(e as Error).message}`, { cause: e });
   }
   const parsed = schema.safeParse(raw);
   if (!parsed.success) {
