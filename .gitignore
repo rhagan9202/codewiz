@@ -19,6 +19,9 @@ out/
 # Test / coverage
 coverage/
 .nyc_output/
+tests/test-results/
+tests/playwright-report/
+tests/.turbo/
 
 # Tooling caches
 .turbo/

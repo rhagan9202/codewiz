@@ -11,7 +11,6 @@ type IgnoreInstance = { add(p: string): void; ignores(p: string): boolean };
 function createIgnoreInstance(): IgnoreInstance {
   // Depending on the CJS/ESM interop path, the module may be the factory itself
   // or wrap it under a `.default` key.
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   return typeof _ignore === "function" ? (_ignore() as IgnoreInstance) : ((_ignore.default as () => IgnoreInstance)());
 }
 
